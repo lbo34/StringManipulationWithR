@@ -132,3 +132,33 @@ format(income, digits = 2)
 format(p_values, scientific = FALSE)
 ```
 
+## Controlling other aspects of the string
+
+Not only does `format()` control the way the number is represented, it also controls some of the properties of the resulting string that affect its display.
+
+For example, by default `format()` will pad the start of the strings with spaces so that the decimal points line up, which is really useful if you are presenting the numbers in a vertical column. However, if you are putting the number in the middle of a sentence, you might not want these extra spaces. You can set `trim = TRUE` to remove them.
+
+When numbers are long it can be helpful to "prettify" them, for example instead of 1000000000 display 1,000,000,000. In this case a `,` is added every 3 digits. This can be controlled by the `big.interval` and `big.mark` arguments, e.g. `format(1000000000, big.mark = ",", big.interval = 3, scientific = FALSE)`. These arguments are actually passed on to [`prettyNum()`](https://www.rdocumentation.org/packages/base/versions/3.5.1/topics/formatC) so head there for any further details.
+
+#### Instructions
+We've assigned your formatted income from the previous exercise to `formatted_income`.
+
+* Print `formatted_income` Notice the spaces at the start of the strings.
+* Call `writeLines()` on the formatted income. Notice how the numbers line up on the decimal point.
+* Define `trimmed_income` by using `format()` on `income` with `digits = 2` and `trim = TRUE`.
+* Call `writeLines()` on `trimmed_income`. Notice how this removes the spaces at the start of the strings and the values line up on left.
+* Define `pretty_income` by using `format()` on `income` with `digits = 2` and `big.mark = ","`.
+* Call `writeLines()` on `pretty_income`.
+
+```{r eval = F}
+formatted_income <- format(income, digits = 2)
+writeLines(formatted_income)
+
+trimmed_income <- format(income, digits = 2, trim = T)
+writeLines(trimmed_income)
+
+pretty_income <- format(income, digits = 2, big.mark = ",")
+writeLines(pretty_income)
+```
+
+
