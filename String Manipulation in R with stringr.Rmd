@@ -152,6 +152,7 @@ We've assigned your formatted income from the previous exercise to `formatted_in
 
 ```{r eval = F}
 formatted_income <- format(income, digits = 2)
+print(formatted_income)
 writeLines(formatted_income)
 
 trimmed_income <- format(income, digits = 2, trim = T)
