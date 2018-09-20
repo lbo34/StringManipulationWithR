@@ -683,4 +683,218 @@ table(sex)
 
 # 3rd Segment - Pattern matching with regular expressions
 
+## Matching the start or end of the string
 
+`rebus` provides `START` and `END` shortcuts to specify regular expressions that match the start and end of the string. These are also known as anchors. You can try it out just by typing
+
+> START
+
+You'll see the output `<regex> ^`. The `<regex>` denotes this is a special regex object and it has the value `^`. `^` is the character used in the regular expression language to denote the start of a string.
+
+The special operator provided by rebus, `%R%` allows you to compose complicated regular expressions from simple pieces. When you are reading rebus code, think of `%R%` as "then". For example, you could combine `START` with `c`,
+
+> START %R% "c"
+
+to match the pattern "the start of string then a c", or in other words: strings that start with c. In rebus, if you want to match a specific character, or a specific sequence of characters, you simply specify them as a string, e.g. surround them with `"`.
+
+#### Instructions
+* Which character is used to match the end of a string? Print `END` to find out.
+* `str_view()` from `stringr` is really helpful for testing your patterns. Run this line of code to see the matches in x to the pattern `START %R% "c"`.  
+* Provide the pattern argument to match strings that start in `"co"`
+* Provide the pattern argument to match strings that end in `"at"`. Think about this as matching an "at" followed by the end of the string.
+* Provide the pattern argument to match strings that are `"cat"` exactly. Think about this as matching the start of the string, followed by "cat" and then the end of the string.
+
+```{r eval = F}
+# Some strings to practice with
+x <- c("cat", "coat", "scotland", "tic toc")
+
+END
+str_view(x, pattern = START %R% "c")
+
+str_view(x, pattern = START %R% "co")
+
+str_view(x, pattern = "at" %R% END)
+
+str_view(x, pattern = START %R% "cat" %R% END)
+```
+
+## Matching any character
+
+In a regular expression you can use a wildcard to match a single character, no matter what the character is. In rebus it is specified with `ANY_CHAR`. Try typing `ANY_CHAR` in the console. You should see that in the regular expression language this is specified by a dot, `.`.
+
+For example, `"c" %R% ANY_CHAR %R% "t"` will look for patterns like "c_t" where the blank can be any character. Consider the strings: "cat", "coat", "scotland" and "tic toc". Where would the matches to `"c" %R% ANY_CHAR %R% "t"` be?
+
+Test your intuition by running:
+
+> str_view(c("cat", "coat", "scotland", "tic toc"),  
+>  pattern = "c" %R% ANY_CHAR %R% "t")
+
+Notice that `ANY_CHAR` will match a space character (`c t` in `tic toc`). It will also match numbers or punctuation symbols, but `ANY_CHAR` will only ever match one character, which is why we get no match in coat.
+
+#### Instructions
+* Match any character followed by a `t`
+* Match a `t` followed by any character. *Notice how the final `t` in cat and coat don't match, that's because there is no character after the `t` to match to `ANY_CHAR`*.
+* Match any two characters. *Notice the first two characters are matched. Regular expression are lazy and will take the first match they find*.
+* Match a string that is exactly three characters.
+
+```{r eval = F}
+str_view(x, pattern = ANY_CHAR %R% "t")
+
+str_view(x, pattern = "t" %R% ANY_CHAR)
+
+str_view(x, pattern = ANY_CHAR %R% ANY_CHAR)
+
+str_view(x, pattern = START %R% ANY_CHAR %R% ANY_CHAR %R% ANY_CHAR %R% END)
+```
+
+## Combining with stringr functions
+
+You can pass a regular expression as the `pattern` argument to any `stringr` function that has the `pattern` argument. You can use `str_detect()` to get a logical vector for whether there was a match, `str_subset()` to return just the strings with matches, and `str_count()` to count the number of matches in each string.
+
+As a reminder, compare the output of those three functions with our `"c_t"` pattern from the previous exercise:
+
+> x <- c("cat", "coat", "scotland", "tic toc")  
+> pattern <- "c" %R% ANY_CHAR %R% "t"  
+> str_detect(x, pattern)  
+> str_subset(x, pattern)  
+> str_count(x, pattern)  
+
+It now also makes sense to add `str_extract()` to your repertoire. It returns just the part of the string that matched the pattern:
+
+> str_extract(x, pattern)
+
+You'll combine your regular expression skills with `stringr` to ask how often a `q` is followed by any character in boy names.
+
+It's always a good idea to test your pattern, so this pattern is shown matched with four names. *The first two shouldn't have matches (can you explain why?) but the last two should.*
+
+#### Instructions
+* Find the `boy_names` with the pattern by using `str_subset()`. Assign the result to `names_with_q`.
+* Run `length()` on the result to find out how many there are.
+* Find just the part of `boy_names` that matched with `str_extract()`. Assign the result to `part_with_q`.
+* Run `table()` on the result to find out how many have `qu` and how many have other patterns.
+* Check that there weren't any boy_names that might have had the pattern twice (you would have only found the first match) by using `str_count()`. Assign the result to `count_of_q`.
+* Use `table()` on the result.
+* Get a logical vector of whether or not each boy's name contains `q*` by calling `str_detect()`. Assign the result to `with_q`.
+* Count the fraction of boy's names containing `q*` by calculating the `mean()` of `with_q`.
+
+```{r eval = FALSE}
+pattern <- "q" %R% ANY_CHAR
+
+names_with_q <- str_subset(string = boy_names, pattern = pattern)
+length(names_with_q)
+
+part_with_q <- str_extract(boy_names, pattern = pattern)
+table(part_with_q)
+
+count_of_q <- str_count(boy_names, pattern = pattern)
+table(count_of_q)
+
+with_q <- str_detect(boy_names, pattern = pattern)
+mean(with_q)
+```
+
+## Alternation
+
+The `rebus` function `or()` allows us to specify a set of alternatives, which may be single characters or character strings, to be matched. Each alternative is passed as a separate argument.
+
+For example, `or("grey", "gray")` allows us to detect either the American or British spelling:
+
+> x <- c("grey sky", "gray elephant")  
+> str_view(x, pattern = or("grey", "gray"))
+
+Since these two words only differ by one character you could equivalently specify this match with `"gr" %R% or("e", "a") %R% "y"`, that is "a gr followed by, an e or an a, then a y".
+
+Notice we've added the argument `match = TRUE` to `str_view()`, this will only display elements that had a match, which is useful when you are searching over many strings.
+
+#### Instructions
+* Create a pattern that matches `Jeffrey` or `Geoffrey` in `boy_names`. Assign this to `whole_names`.
+* Create a pattern that matches `Je` or `Geo` followed by `ffrey`. Assign this to `common_ending`. You should get the same matches as the previous pattern.
+* Create a pattern that matches `Je` or `Geo`, followed by `ff`, followed by one of `ry`, `ery`, `rey`, or `erey`. Assign this to `by_parts`.
+* Create a pattern that matches `all girl_names` that start with `C` or `K` followed by `ath`. Assign this to `ckath`.
+
+```{r eval = F}
+whole_names <- or("Jeffrey", "Geoffrey")
+str_view(boy_names, pattern = whole_names, match = T)
+
+common_ending <- or("Je", "Geo") %R% "ffrey"
+str_view(boy_names, pattern = common_ending, match = T)
+
+by_parts <- or("Je", "Geo") %R% "ff" %R% or("ry", "ery", "rey", "erey")
+str_view(boy_names, pattern = by_parts, match = T)
+
+ckath <- or("C", "K") %R% "ath"
+str_view(girl_names, pattern = ckath, match = T)
+```
+
+## Character classes
+
+In regular expressions a character class is a way of specifying "match one (and only one) of the following characters". In `rebus` you can specify the set of allowable characters using the function `char_class()`.
+
+This is another way you could specify an alternate spelling, for example, specifying "a gr followed by, either an a or e, followed by a y":
+
+> x <- c("grey sky", "gray elephant")  
+> str_view(x, pattern = "gr" %R% char_class("ae") %R% "y")
+
+A negated character class matches "any single character that isn't one of the following", and in `rebus` is specified with `negated_char_class()`.
+
+Unlike in other places in a regular expression you don't need to escape characters that might otherwise have a special meaning inside character classes. If you want to match `.` you can include `.` directly, e.g. `char_class(".")`. Matching a `-` is a bit trickier. If you need to do it, just make sure it comes first in the character class.
+
+#### Instructions
+* Create a character class that contains vowels, `a, e, i, o, u` and their upper case versions.
+* Print `vowels`. In the regular expression language, a character class is put inside `[`.
+* View the matches to the pattern vowels in `x` with `str_view()`. Notice how only the first vowel is matched.
+* Find the number of vowels in each `boy_names` by combining `str_count()` with the vowels pattern.
+* Find the number of characters in each `boy_names` with `str_length()`.
+* Find the average number of vowels in `boy_names` using the `mean` of `num_vowels`.
+* Look at the mean ratio of `num_vowels` and `name_length`
+
+```{r eval = F}
+x <-  c("grey sky", "gray elephant")
+
+vowels <- char_class("aeiouAEIOU")
+vowels
+str_view(x, vowels) # matches only the first one
+str_view_all(x, vowels) # matches all
+
+num_vowels <- str_count(boy_names, pattern = vowels)
+name_length <- str_count(boy_names)
+
+mean(num_vowels)
+mean(num_vowels/name_length)
+```
+
+## Repetition
+
+The rebus functions `one_or_more()`, `zero_or_more()` and `optional()` can be used to wrap parts of a regular expression to allow a pattern to match a variable number of times.
+
+Take our vowels pattern from the last exercise. You can pass it to `one_or_more()` to create the pattern that matches "one or more vowels". Take a look with these interjections:
+
+> x <- c("ow", "ooh", "yeeeah!", "shh")  
+> str_view(x, pattern = one_or_more(vowels))
+
+You'll see we can match the single o in ow, the double o in ooh and the string of es followed by the a in yeeeah, but nothing in shh because there isn't a single vowel.
+
+In contrast `zero_or_more()` will match even if there isn't an occurrence, try
+
+> str_view(x, pattern = zero_or_more(vowels))
+
+Since both yeeeah and shh start without a vowel, they match "zero vowels", and since regular expressions are lazy, they look no further and return the start of the string as a match.
+
+#### Instructions
+* Find `boy_names` that are only vowels, by combining `one_or_more()` with `vowels`. You will need to either specify `START` and `END` or `use exactly()`.
+* Create a `negated_char_class()` that matches anything but a vowel. (Note: `negated_char_class(vowels)` is not the right answer!)
+* Find `boy_names` that have no vowels, by combining `exactly()` and `one_or_more()` with `not_vowels`.
+
+```{r eval = F}
+str_view(boy_names,
+         pattern = exactly(one_or_more(vowels)),
+         match = T)
+
+not_vowels <- negated_char_class("aeiouAEIOU")
+
+# See names with no vowels
+str_view(boy_names, 
+  pattern = exactly(one_or_more(not_vowels)), 
+  match = TRUE)
+```
+  
